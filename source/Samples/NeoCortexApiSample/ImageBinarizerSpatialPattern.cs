@@ -129,28 +129,25 @@ namespace NeoCortexApiSample
 
             int[] activeArray = new int[numColumns];
 
-            HtmClassifier<string, ComputeCycle> cls = new HtmClassifier<string, ComputeCycle>();
-            var clk = new KNeighborsClassifier<string, ComputeCycle>();
-
             int numStableCycles = 0;
-            // Runnig the Traning Cycle for maximun 200 times untill Stability is True
+            bool storedStableCycleSDRs = false; // Flag to track if SDRs are stored for the first stable cycle
             int maxCycles = 200;
             int currentCycle = 0;
-            // Create the "SDROutput" folder if it doesn't exist
+
+            // Create the "SDROutput" folder if it doesn't exist, or delete and recreate it each time
             string sdrOutputFolder = ".\\SDROutput";
             // Delete the folder if it exists
             if (Directory.Exists(sdrOutputFolder))
             {
-                Directory.Delete(sdrOutputFolder, true);
+                Directory.Delete(sdrOutputFolder, true);  // This will delete the folder and all its contents
             }
             // Recreate the folder
             Directory.CreateDirectory(sdrOutputFolder);
-
             // Create a text file to store the SDRs
             string sdrFilePath = Path.Combine(sdrOutputFolder, "SDRs.txt");
 
             // Open a StreamWriter to write to the file
-            using (StreamWriter writer = new StreamWriter(sdrFilePath, append: true))
+            using (StreamWriter writer = new StreamWriter(sdrFilePath, append: false))
             {
                 // Redirect console output to the file
                 Console.SetOut(writer);
@@ -159,34 +156,41 @@ namespace NeoCortexApiSample
                 {
                     foreach (var binarizedImagePath in binarizedImagePaths)
                     {
-                        // Read Binarized and Encoded input csv file into array
+                        // Read Binarized and Encoded input CSV file into an array
                         int[] inputVector = NeoCortexUtils.ReadCsvIntegers(binarizedImagePath).ToArray();
 
-                        int[] oldArray = new int[activeArray.Length];
-                        List<double[,]> overlapArrays = new List<double[,]>();
-                        List<double[,]> bostArrays = new List<double[,]>();
-
                         sp.compute(inputVector, activeArray, true);
+
                         // Getting the Active Columns
                         var activeCols = ArrayUtils.IndexWhere(activeArray, (el) => el == 1);
 
+                        string image = Path.GetFileNameWithoutExtension(binarizedImagePath);
 
-                        string Image = Path.GetFileNameWithoutExtension(binarizedImagePath);
-
-                        Console.WriteLine($"'Cycle: {currentCycle} - Image-Input: {Image}'");
-                        Debug.WriteLine($"'Cycle: {currentCycle} - Image-Input: {Image}'");
+                        Debug.WriteLine($"Cycle: {currentCycle} - Image-Input: {image}");
                         Debug.WriteLine($"INPUT :{Helpers.StringifyVector(inputVector)}");
-                        Debug.WriteLine($"SDR:{Helpers.StringifyVector(activeCols)}\n");
-                        // Print the SDR (active columns) to the file (console output is redirected to the file)
-                        Console.WriteLine($"SDR:{Helpers.StringifyVector(activeCols)}\n");
-                        //Ensure content is written to the file immediately
-                        writer.Flush();
+                        Debug.WriteLine($"SDR: {Helpers.StringifyVector(activeCols)}\n");
 
+                        // Store SDRs only for the first stable cycle
+                        if (isInStableState && !storedStableCycleSDRs)
+                        {
+                            Console.WriteLine($"Stable Cycle: {currentCycle} - Image-Input: {image}");
+                            Console.WriteLine($"SDR: {Helpers.StringifyVector(activeCols)}\n");
+
+                            // Ensure content is written to the file immediately
+                            writer.Flush();
+                        }
                     }
-                    Debug.WriteLine($"Completed Cycle ** {currentCycle} ** Stability: {isInStableState}\n");
-                    currentCycle++;
 
-                    // Check if the desired number of cycles is reached
+                    // If stability is reached and SDRs were stored, update the flag
+                    if (isInStableState && !storedStableCycleSDRs)
+                    {
+                        Debug.WriteLine($"Storing SDRs for the first stable cycle: {currentCycle}");
+                        storedStableCycleSDRs = true;
+                    }
+
+                    Debug.WriteLine($"Completed Cycle * {currentCycle} * Stability: {isInStableState}\n");
+                    currentCycle++;
+                    //Check if the desired number of cycles is reached
                     if (currentCycle >= maxCycles)
                         break;
 
@@ -200,6 +204,7 @@ namespace NeoCortexApiSample
                         break;
                 }
             }
+
             Debug.WriteLine("It has reached the stable stage");
             return sp;
         }
