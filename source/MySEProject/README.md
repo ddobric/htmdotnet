@@ -42,6 +42,22 @@ HTM systems. By preprocessing images into this sparse binary format, the ImageEn
 gap between raw image data and the HTM's Spatial Pooler, making it a foundational component for
 image-based experiments, such as learning spatial patterns or regenerating inputs from SDRs.
 
+###Encoding Process
+####Image Binarization
+Input images are binarized using thresholds for RGB channels and resized. Binarized images are saved for further processing.
+
+####Binary Conversion
+Binarized images are converted into a binary array (inputVector) for processing with the NeoCortex framework.
+
+####Spatial Pooling
+The binary input vector is processed using the Spatial Pooler to generate Sparse Distributed Representations (SDRs), identifying active columns.
+
+####Labeling and Storage
+SDRs are labeled with image names and stored for training and prediction in downstream tasks like classification.
+
+####Visualization
+1D heatmaps and similarity plots are generated for analysis and monitoring of the encoding process.
+
 ### Sparse Distributed Representations (SDR):
 
 Sparse Distributed Representations (SDRs) are analogous to how the human brain encodes
