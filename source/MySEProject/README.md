@@ -6,6 +6,11 @@
 - [Introduction](#introduction)
 - [Image Encoder](#image-encoder)
 - [Sparse Distributed Representations (SDR)](#sparse-distributed-representations-sdr)
+- [Hierarchical Temporal Memory (HTM)](#hierarchical-temporal-memory-htm)
+- [Spatial Pooler (SP)](#spatial-pooler-sp)
+  - [Spatial Pooler Functions and Mechanisms](#spatial-pooler-functions-and-mechanisms)
+  - [Phases of the Spatial Pooler](#phases-of-the-spatial-pooler)
+
 
 ### Problem Statement:
 This project aims to explore the role of classifiers in Hierarchical Temporal Memory (HTM) systems,
@@ -35,6 +40,7 @@ gap between raw image data and the HTM's Spatial Pooler, making it a foundationa
 image-based experiments, such as learning spatial patterns or regenerating inputs from SDRs.
 
 ### Sparse Distributed Representations (SDR):
+
 Sparse Distributed Representations (SDRs) are analogous to how the human brain encodes
 information. Just as neurons in the brain fire in sparse patterns, with only a small fraction of neurons
 active at any time, SDRs use binary vectors where a small percentage of bits are active (1s) while the
@@ -49,10 +55,63 @@ HTM, including spatial pooling and temporal memory, providing a biologically pla
 computationally robust framework for learning and prediction.
 
 ### Hierarchical Temporal Memory (HTM)
+
 Hierarchical Temporal Memory is a theoretical framework and machine learning approach inspired by the structure and function of the neocortex in the human brain. Temporal Memory (TM) is a key component of HTM. It is the mechanism responsible for learning and predicting sequences of patterns based on temporal context. It is designed to capture and store the sequence in which events occur, allowing the system to recognize and predict temporal patterns. The workflow of Hierarchical Temporal Memory (HTM) involves processing input data into sparse distributed representations (SDRs) using an encoder, which captures the essential features of the input. These SDRs are passed to the spatial pooler, which ensures sparsity and generalizes similar inputs. The temporal memory then learns and stores temporal sequences by activating specific cells in its structure based on previous contexts, forming associations over time. As new inputs arrive, the temporal memory predicts future sequences by activating likely next-step cells based on learned patterns. 
 
 ### Spatial Pooler (SP):
+
 The Spatial Pooler is a fundamental component of Hierarchical Temporal Memory (HTM) systems, transforming raw input data into Sparse Distributed Representations (SDRs). Its primary function is to encode the input while ensuring key properties such as sparsity and similarity preservation. Sparsity ensures that only a small percentage of bits in the SDR are active, which improves computational efficiency and reduces noise sensitivity. Similarity preservation means that inputs with similar patterns produce SDRs with overlapping active bits, enabling the system to recognize related patterns effectively. The Spatial Pooler achieves this through competition among columns of cells, where each column competes to represent specific input features, guided by synaptic connections that adapt over time. This adaptation allows the Spatial Pooler to learn the statistical structure of the input space, making it robust to noise and capable of generalizing from limited data. As a result, the Spatial Pooler provides the foundation for further processing, such as temporal learning and classification, in HTM systems.
+
+### Spatial Pooler Functions and Mechanisms
+
+#### Core Functions:
+1. **Input Processing**:
+   - Accepts spatially encoded patterns, such as binary vectors from the ImageEncoder.
+   - Prepares inputs for compatibility with HTM's SDR format.
+
+2. **Sparse Distributed Representations (SDR) Generation**:
+   - Produces sparse binary outputs with a controlled percentage of active bits.
+   - Ensures similar inputs yield SDRs with overlapping active bits, while dissimilar inputs produce distinct representations.
+
+3. **Learning and Adaptation**:
+   - Learns the statistical properties of input patterns via synaptic adaptation.
+   - Dynamically adjusts synaptic permanence to optimize connectivity.
+
+4. **Noise Resilience**:
+   - Generalizes input patterns to recognize noisy or incomplete data.
+   - Maintains robustness against input variations.
+
+5. **Stability and Plasticity**:
+   - Balances stability and flexibility in representations, ensuring consistent encoding of recurring patterns while adapting to new inputs.
+
+
+
+### Phases of the Spatial Pooler:
+
+1. **Overlap Phase**:
+   - **Purpose**: Compute overlap between input patterns and synaptic connections for each column.
+   - **Process**: Columns assess the similarity of their synapses to the input; higher overlap values indicate better matches.
+
+2. **Inhibition Phase**:
+   - **Purpose**: Ensure sparsity by limiting active columns.
+   - **Process**: Columns compete within their inhibition radius, and only the top percentage of columns with the highest overlap are activated.
+
+3. **Learning Phase**:
+   - **Purpose**: Adapt synaptic connections to improve encoding of input patterns.
+   - **Process**:
+     - Active columns strengthen their synapses.
+     - Synaptic permanence values are updated based on input activity and learning thresholds.
+     - Homeostatic mechanisms promote balanced column utilization.
+
+4. **Output Generation**:
+   - **Purpose**: Produce high-quality SDRs for downstream processing.
+   - **Process**: Converts learned patterns into robust, sparse binary vectors.
+
+5. **Stability Monitoring**:
+   - **Purpose**: Maintain system stability during learning.
+   - **Process**: Adjusts parameters dynamically to balance plasticity and stability.
+
+
 
 ### K-Nearest Neighbors (KNN):
 The K-Nearest Neighbours (KNN) classifier is a simple, non-parametric algorithm used for classification and regression tasks. It stores all the labeled training data and classifies new data points based on their similarity to the closest training samples. When a new input is provided, the algorithm computes its distance (commonly using Euclidean distance) from all training points, identifies the "k" nearest neighbors, and assigns the most common label among those neighbours to the input. In the context of this project, KNN could serve as a baseline classifier or a comparative model for evaluating SDR representations. When provided with an SDR or a derived feature vector, KNN computes distances (e.g., Euclidean) to its "k" closest neighbors and predicts the most frequent label among them. This method can be useful in this project to classify SDRs or reconstructed patterns, allowing comparisons between HTM's ability to generalize patterns and KNN's reliance on proximity and similarity. While KNN is straightforward and effective for small-scale problems, it lacks the adaptive learning and biological inspiration of HTM, making it less dynamic for processing evolving data streams.
