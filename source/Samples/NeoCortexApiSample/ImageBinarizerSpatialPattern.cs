@@ -141,6 +141,10 @@ namespace NeoCortexApiSample
             {
                 Directory.Delete(sdrOutputFolder, true);  // This will delete the folder and all its contents
             }
+            //Initializing KNN Classifier
+            var knnClassifier = new KNeighborsClassifier<string, string>();
+            var labeledSDRs = new Dictionary<string, List<int[]>>();
+
             // Recreate the folder
             Directory.CreateDirectory(sdrOutputFolder);
             // Create a text file to store the SDRs
@@ -173,16 +177,33 @@ namespace NeoCortexApiSample
                         // Store SDRs only for the first stable cycle
                         if (isInStableState && !storedStableCycleSDRs)
                         {
+                            string label = image; // Label the SDRs with the image name for training
+                            knnClassifier.Learn(label, activeCols.Select(idx => new Cell { Index = idx }).ToArray());
+                            if (!labeledSDRs.ContainsKey(label))
+                            {
+                                labeledSDRs[label] = new List<int[]>();
+                            }
+                            labeledSDRs[label].Add(activeCols);
+
                             Console.WriteLine($"Stable Cycle: {currentCycle} - Image-Input: {image}");
                             Console.WriteLine($"SDR: {Helpers.StringifyVector(activeCols)}\n");
 
                             // Ensure content is written to the file immediately
                             writer.Flush();
                         }
+                    
+                    if (isInStableState)
+                    {
+                        foreach (var testSDR in labeledSDRs)
+                        {
+                            var predictions = knnClassifier.GetPredictedInputValues(activeCols.Select(idx => new Cell { Index = idx }).ToArray());
+                            Debug.WriteLine($"Predictions for {image}: {string.Join(", ", predictions.Select(p => p.PredictedInput))}");
+                        }
                     }
+                }
 
-                    // If stability is reached and SDRs were stored, update the flag
-                    if (isInStableState && !storedStableCycleSDRs)
+                // If stability is reached and SDRs were stored, update the flag
+                if (isInStableState && !storedStableCycleSDRs)
                     {
                         Debug.WriteLine($"Storing SDRs for the first stable cycle: {currentCycle}");
                         storedStableCycleSDRs = true;
