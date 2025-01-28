@@ -10,8 +10,7 @@ using System.Linq;
 using NeoCortexApi.Classifiers;
 using Daenet.ImageBinarizerLib.Entities;
 using Daenet.ImageBinarizerLib;
-//using Daenet.Binarizer;
-//using Daenet.Binarizer.Entities;
+using NeoCortexEntities.NeuroVisualizer;
 
 namespace NeoCortexApiSample
 {
@@ -134,6 +133,8 @@ namespace NeoCortexApiSample
 
             //Initializing the Spatial Pooler Algorithm
             sp.Init(mem, new DistributedMemory() { ColumnDictionary = new InMemoryDistributedDictionary<int, NeoCortexApi.Entities.Column>(1) });
+            //It creates the instance of HTMClassifier
+            HtmClassifier<string, ComputeCycle> imageClassifier = new HtmClassifier<string, ComputeCycle>();
 
             int[] activeArray = new int[numColumns];
 
@@ -141,6 +142,9 @@ namespace NeoCortexApiSample
             bool storedStableCycleSDRs = false; // Flag to track if SDRs are stored for the first stable cycle
             int maxCycles = 200;
             int currentCycle = 0;
+
+            // Dictionary to store SDRs for later training
+            Dictionary<string, Cell[]> imageSDRMap = new Dictionary<string, Cell[]>();
 
             // Create the "SDROutput" folder if it doesn't exist, or delete and recreate it each time
             string sdrOutputFolder = ".\\SDROutput";
@@ -158,6 +162,9 @@ namespace NeoCortexApiSample
             // Create a text file to store the SDRs
             string sdrFilePath = Path.Combine(sdrOutputFolder, "SDRs.txt");
 
+            // ===========================
+            //       SPATIAL POOLER PHASE
+            // ===========================
             // Open a StreamWriter to write to the file
             using (StreamWriter writer = new StreamWriter(sdrFilePath, append: false))
             {
@@ -175,8 +182,12 @@ namespace NeoCortexApiSample
 
                         // Getting the Active Columns
                         var activeCols = ArrayUtils.IndexWhere(activeArray, (el) => el == 1);
+                        var cells = activeCols.Select(index => new Cell(index, 0, cfg.CellsPerColumn, new CellActivity())).ToArray();
 
                         string image = Path.GetFileNameWithoutExtension(binarizedImagePath);
+
+                        // Store SDR representation for later training
+                        imageSDRMap[image] = cells;
 
                         Debug.WriteLine($"Cycle: {currentCycle} - Image-Input: {image}");
                         Debug.WriteLine($"INPUT :{Helpers.StringifyVector(inputVector)}");
@@ -196,6 +207,9 @@ namespace NeoCortexApiSample
                             Console.WriteLine($"Stable Cycle: {currentCycle} - Image-Input: {image}");
                             Console.WriteLine($"SDR: {Helpers.StringifyVector(activeCols)}\n");
 
+                            Debug.WriteLine($"Storing SDRs for the first stable cycle: {currentCycle}");
+                            storedStableCycleSDRs = true;
+
                             // Ensure content is written to the file immediately
                             writer.Flush();
                         }
@@ -205,16 +219,9 @@ namespace NeoCortexApiSample
                             foreach (var testSDR in labeledSDRs)
                             {
                                 var predictions = knnClassifier.GetPredictedInputValues(activeCols.Select(idx => new Cell { Index = idx }).ToArray());
-                                Debug.WriteLine($"Predictions for {image}: {string.Join(", ", predictions.Select(p => p.PredictedInput))}");
+                                //Debug.WriteLine($"Predictions for {image}: {string.Join(", ", predictions.Select(p => p.PredictedInput))}");
                             }
                         }
-                    }
-
-                    // If stability is reached and SDRs were stored, update the flag
-                    if (isInStableState && !storedStableCycleSDRs)
-                    {
-                        Debug.WriteLine($"Storing SDRs for the first stable cycle: {currentCycle}");
-                        storedStableCycleSDRs = true;
                     }
 
                     Debug.WriteLine($"Completed Cycle * {currentCycle} * Stability: {isInStableState}\n");
@@ -233,8 +240,24 @@ namespace NeoCortexApiSample
                         break;
                 }
             }
-
             Debug.WriteLine("It has reached the stable stage");
+
+            // ===========================
+            //      CLASSIFIER TRAINING PHASE
+            // ===========================
+            Debug.WriteLine("Starting Classifier Training Phase...");
+
+            foreach (var entry in imageSDRMap)
+            {
+                string imageKey = entry.Key;
+                Cell[] cells = entry.Value;
+
+                imageClassifier.Learn(imageKey, cells);
+                Debug.WriteLine($"Trained Classifier on Image: {imageKey}");
+            }
+
+            Debug.WriteLine("Classifier Training Completed.");
+
             return sp;
         }
         /// <summary>
