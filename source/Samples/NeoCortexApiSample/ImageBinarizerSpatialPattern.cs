@@ -257,7 +257,12 @@ namespace NeoCortexApiSample
             }
 
             Debug.WriteLine("Classifier Training Completed.");
-
+            // ===========================
+            //    RESET CLASSIFIER
+            // ===========================
+            Debug.WriteLine("Resetting Classifier for Next Experiment...");
+            imageClassifier.ClearState();
+            Debug.WriteLine("Prediction Phase Completed.");
             return sp;
         }
         /// <summary>
