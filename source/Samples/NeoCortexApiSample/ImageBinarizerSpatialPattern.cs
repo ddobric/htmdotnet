@@ -7,8 +7,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using GemBox.Spreadsheet.Drawing;
 using NeoCortexApi.Classifiers;
+using Daenet.ImageBinarizerLib.Entities;
+using Daenet.ImageBinarizerLib;
+//using Daenet.Binarizer;
+//using Daenet.Binarizer.Entities;
 
 namespace NeoCortexApiSample
 {
@@ -29,22 +32,24 @@ namespace NeoCortexApiSample
             // We will build a slice of the cortex with the given number of mini-columns
             int numColumns = 64 * 64;
             // The Size of the Image Height and width is 28 pixel
-            int imageSize = 25;
+            //int imageSize = 25;
+            int imgHeight = 30;
+            int imgWidth = 60;
             var colDims = new int[] { 64, 64 };
 
             // This is a set of configuration parameters used in the experiment.
-            HtmConfig cfg = new HtmConfig(new int[] { imageSize, imageSize }, new int[] { numColumns })
+            HtmConfig cfg = new HtmConfig(new int[] { imgHeight, imgWidth }, new int[] { numColumns })
             {
                 CellsPerColumn = 10,
-                InputDimensions = new int[] { imageSize, imageSize },
-                NumInputs = imageSize * imageSize,
+                InputDimensions = new int[] { imgHeight, imgWidth },
+                NumInputs = imgHeight * imgWidth,
                 ColumnDimensions = colDims,
                 MaxBoost = maxBoost,
                 DutyCyclePeriod = 100,
                 MinPctOverlapDutyCycles = minOctOverlapCycles,
                 GlobalInhibition = false,
                 NumActiveColumnsPerInhArea = 0.02 * numColumns,
-                PotentialRadius = (int)(0.15 * imageSize * imageSize),
+                PotentialRadius = (int)(0.15 * imgHeight * imgWidth),
                 LocalAreaDensity = -1,
                 ActivationThreshold = 10,
                 MaxSynapsesPerSegment = (int)(0.01 * numColumns),
@@ -79,7 +84,9 @@ namespace NeoCortexApiSample
             var trainingImages = Directory.EnumerateFiles(trainingFolder).Where(file => file.StartsWith($"{trainingFolder}\\{inputPrefix}") &&
             (file.EndsWith(".jpeg") || file.EndsWith(".jpg") || file.EndsWith(".png"))).ToArray();
             //Image Size
-            int imageSize = 25;
+            //int imageSize = 25;
+            int imgHeight = 30;
+            int imgWidth = 60;
             // Path to the folder where results will be saved
             String outputFolder = ".\\BinarizedImages";
             // Delete the folder if it exists
@@ -98,8 +105,9 @@ namespace NeoCortexApiSample
                 string outputPath = Path.Combine(outputFolder, outputFileName);
 
                 // Binarizing the images
-                string binarizedImagePath = NeoCortexUtils.BinarizeImage($"{image}", imageSize, outputPath);
-                binarizedImagePaths.Add(binarizedImagePath);
+                string binaryImagePath = BinarizeImage(imgWidth, imgHeight, outputPath, image);
+                //string binarizedImagePath = NeoCortexUtils.BinarizeImage($"{image}", imageSize, outputPath);
+                binarizedImagePaths.Add(binaryImagePath);
             }
             Debug.WriteLine("All images are binarized");
 
@@ -191,19 +199,19 @@ namespace NeoCortexApiSample
                             // Ensure content is written to the file immediately
                             writer.Flush();
                         }
-                    
-                    if (isInStableState)
-                    {
-                        foreach (var testSDR in labeledSDRs)
+
+                        if (isInStableState)
                         {
-                            var predictions = knnClassifier.GetPredictedInputValues(activeCols.Select(idx => new Cell { Index = idx }).ToArray());
-                            Debug.WriteLine($"Predictions for {image}: {string.Join(", ", predictions.Select(p => p.PredictedInput))}");
+                            foreach (var testSDR in labeledSDRs)
+                            {
+                                var predictions = knnClassifier.GetPredictedInputValues(activeCols.Select(idx => new Cell { Index = idx }).ToArray());
+                                Debug.WriteLine($"Predictions for {image}: {string.Join(", ", predictions.Select(p => p.PredictedInput))}");
+                            }
                         }
                     }
-                }
 
-                // If stability is reached and SDRs were stored, update the flag
-                if (isInStableState && !storedStableCycleSDRs)
+                    // If stability is reached and SDRs were stored, update the flag
+                    if (isInStableState && !storedStableCycleSDRs)
                     {
                         Debug.WriteLine($"Storing SDRs for the first stable cycle: {currentCycle}");
                         storedStableCycleSDRs = true;
@@ -242,7 +250,9 @@ namespace NeoCortexApiSample
             // Get all image files matching the specified prefix
             var trainingImages = Directory.GetFiles(trainingFolder, $"{inputPrefix}*.png");
             // Size of the images
-            int imgSize = 25;
+            //int imgSize = 25;
+            int imgHeight = 30;
+            int imgWidth = 60;
             // Name for the test image
             string testName = "test_image";
             // Array to hold active columns
@@ -257,10 +267,11 @@ namespace NeoCortexApiSample
             List<double[]> similarityList = new List<double[]>();
             foreach (var Image in trainingImages)
             {
-                string inputBinaryImageFile = NeoCortexUtils.BinarizeImage($"{Image}", imgSize, testName);
+                //string inputBinaryImageFile = NeoCortexUtils.BinarizeImage($"{Image}", imgSize, testName);
+                string binaryImagePath = BinarizeImage(imgWidth, imgHeight, testName, Image);
 
                 // Read input csv file into array
-                int[] inputVector = NeoCortexUtils.ReadCsvIntegers(inputBinaryImageFile).ToArray();
+                int[] inputVector = NeoCortexUtils.ReadCsvIntegers(binaryImagePath).ToArray();
 
                 // Initialize arrays and lists for computations
                 int[] oldArray = new int[activeArray.Length];
@@ -408,6 +419,23 @@ namespace NeoCortexApiSample
             Debug.WriteLine($"Combined similarity plot generated and saved successfully.");
 
         }
+        private static string BinarizeImage(int imageWidth, int imageHeight, string destinationPath, string imagePath)
+        {
+            string binaryImage;
+
+            binaryImage = $"{destinationPath}.txt";
+
+            if (File.Exists(binaryImage))
+                File.Delete(binaryImage);
+
+            ImageBinarizer imageBinarizer = new ImageBinarizer(new BinarizerParams { RedThreshold = 200, GreenThreshold = 200, BlueThreshold = 200, ImageWidth = imageWidth, ImageHeight = imageHeight, InputImagePath = imagePath, OutputImagePath = binaryImage });
+
+            imageBinarizer.Run();
+
+            return binaryImage;
+        }
+
+
     }
 }
 
