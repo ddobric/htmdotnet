@@ -154,3 +154,29 @@ HTM's spatial pooler not only classifies input patterns but also reconstructs th
 
 #### Similarity Metrics and Interpretability:
 In this project, HTM employs similarity metrics like the Jaccard Index to evaluate the overlap between the original and reconstructed SDRs. This interpretability and quantitative measure of learning are inherent to HTM. In contrast, KNN's interpretability is limited to understanding which neighbors influence a classification decision, and it does not contribute to understanding the underlying structure of the data.
+
+### Methodolgy:
+#### Learning Phase of the KNN Classifier:
+The learning phase of the KNN classifer involves storing and managing labeled Sparse Distributed Representations (SDRs) to facilitate classification. Below are the key points outlining how learning is implemented:
+
+#### Training Data Storage:
+The classifier maintains a dictionary _sdrMap, which maps each label (e.g., "A", "B", "C") to a list of SDR sequences.
+Each SDR sequence represents the active cells of an input pattern.
+
+#### Processing New Input Sequences
+The Learn(TIN input, Cell[] cells) method is responsible for adding new SDR sequences to the model.
+It extracts the active cell indices from the cells array and converts them into an integer array.
+
+#### Avoiding Duplicate Sequences
+Before adding a new SDR sequence, the classifier checks if the exact sequence already exists for a given label.
+If an identical sequence is found, it is ignored to prevent redundancy.
+
+#### Maintaining Limited Storage Capacity
+The classifier keeps a maximum of _sdrs (default: 10) SDR sequences per label.
+If the number of stored sequences exceeds this limit, the oldest sequence is removed (FIFO mechanism).
+
+#### Incremental Learning
+The classifier dynamically updates the stored sequences, allowing it to adapt to new patterns over time.
+This makes it suitable for handling changes in input distributions while preserving previously learned patterns.
+
+This learning process ensures that the classifier builds a reference dataset of labeled SDRs, which will later be used in the classification (prediction) phase to determine the closest match for unknown inputs.
