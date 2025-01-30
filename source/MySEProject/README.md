@@ -5,13 +5,16 @@
 - [Problem Statement](#problem-statement)
 - [Introduction](#introduction)
 - [Image Encoder](#image-encoder)
+- [Encoding Process](#encoding-process)
 - [Sparse Distributed Representations (SDR)](#sparse-distributed-representations-sdr)
 - [Hierarchical Temporal Memory (HTM)](#hierarchical-temporal-memory-htm)
 - [Spatial Pooler (SP)](#spatial-pooler-sp)
   - [Spatial Pooler Functions and Mechanisms](#spatial-pooler-functions-and-mechanisms)
   - [Phases of the Spatial Pooler](#phases-of-the-spatial-pooler)
 - [K-Nearest Neighbours (KNN) Classifiers](#k-nearest-neighbours-knn-classifiers)
+  - [Methodolgy of KNN Classifier](#methodolgy-of-knn-classifier)
 - [HTM Classifiers](#htm-classifiers)
+  - [Methodolgy of HTM Classifier](#methodolgy-of-htm-classifier)
 - [Difference between HTM and KNN Classifiers](#difference-between-htm-and-knn-classifiers)
 
 
@@ -42,21 +45,16 @@ HTM systems. By preprocessing images into this sparse binary format, the ImageEn
 gap between raw image data and the HTM's Spatial Pooler, making it a foundational component for
 image-based experiments, such as learning spatial patterns or regenerating inputs from SDRs.
 
-###Encoding Process
-####Image Binarization
-Input images are binarized using thresholds for RGB channels and resized. Binarized images are saved for further processing.
-
-####Binary Conversion
-Binarized images are converted into a binary array (inputVector) for processing with the NeoCortex framework.
-
-####Spatial Pooling
-The binary input vector is processed using the Spatial Pooler to generate Sparse Distributed Representations (SDRs), identifying active columns.
-
-####Labeling and Storage
-SDRs are labeled with image names and stored for training and prediction in downstream tasks like classification.
-
-####Visualization
-1D heatmaps and similarity plots are generated for analysis and monitoring of the encoding process.
+### Encoding Process:
+- **Image Binarization** : Input images are binarized using thresholds for RGB channels and resized. Binarized images are saved for further processing.
+  
+- **Binary Conversion** : Binarized images are converted into a binary array (inputVector) for processing with the NeoCortex framework.
+  
+- **Spatial Pooling** : The binary input vector is processed using the Spatial Pooler to generate Sparse Distributed Representations (SDRs), identifying active columns.
+  
+- **Labeling and Storage** : SDRs are labeled with image names and stored for training and prediction in downstream tasks like classification.
+  
+- **Visualization** : 1D heatmaps and similarity plots are generated for analysis and monitoring of the encoding process.
 
 ### Sparse Distributed Representations (SDR):
 
@@ -83,50 +81,47 @@ The Spatial Pooler is a fundamental component of Hierarchical Temporal Memory (H
 
 ### Spatial Pooler Functions and Mechanisms
 
-#### Core Functions:
-1. **Input Processing**:
-   - Accepts spatially encoded patterns, such as binary vectors from the ImageEncoder.
-   - Prepares inputs for compatibility with HTM's SDR format.
+**Input Processing:** 
+- Accepts spatially encoded patterns, such as binary vectors from the ImageEncoder.
+- Prepares inputs for compatibility with HTM's SDR format.
 
-2. **Sparse Distributed Representations (SDR) Generation**:
-   - Produces sparse binary outputs with a controlled percentage of active bits.
-   - Ensures similar inputs yield SDRs with overlapping active bits, while dissimilar inputs produce distinct representations.
+**Sparse Distributed Representations (SDR) Generation:** 
+- Produces sparse binary outputs with a controlled percentage of active bits.
+- Ensures similar inputs yield SDRs with overlapping active bits, while dissimilar inputs produce distinct representations.
 
-3. **Learning and Adaptation**:
-   - Learns the statistical properties of input patterns via synaptic adaptation.
-   - Dynamically adjusts synaptic permanence to optimize connectivity.
+**Learning and Adaptation:**
+- Learns the statistical properties of input patterns via synaptic adaptation.
+- Dynamically adjusts synaptic permanence to optimize connectivity.
 
-4. **Noise Resilience**:
-   - Generalizes input patterns to recognize noisy or incomplete data.
-   - Maintains robustness against input variations.
+**Noise Resilience:**
+- Generalizes input patterns to recognize noisy or incomplete data.
+- Maintains robustness against input variations.
 
-5. **Stability and Plasticity**:
-   - Balances stability and flexibility in representations, ensuring consistent encoding of recurring patterns while adapting to new inputs.
-
-
+**Stability and Plasticity:** 
+- Balances stability and flexibility in representations, ensuring consistent encoding of recurring patterns while adapting to new inputs.
 
 ### Phases of the Spatial Pooler:
 
-1. **Overlap Phase**:
+**Overlap Phase**:
    - **Purpose**: Compute overlap between input patterns and synaptic connections for each column.
    - **Process**: Columns assess the similarity of their synapses to the input; higher overlap values indicate better matches.
 
-2. **Inhibition Phase**:
+**Inhibition Phase**:
    - **Purpose**: Ensure sparsity by limiting active columns.
    - **Process**: Columns compete within their inhibition radius, and only the top percentage of columns with the highest overlap are activated.
 
-3. **Learning Phase**:
+**Learning Phase**:
    - **Purpose**: Adapt synaptic connections to improve encoding of input patterns.
    - **Process**:
      - Active columns strengthen their synapses.
      - Synaptic permanence values are updated based on input activity and learning thresholds.
      - Homeostatic mechanisms promote balanced column utilization.
 
-4. **Output Generation**:
+**Output Generation**:
    - **Purpose**: Produce high-quality SDRs for downstream processing.
    - **Process**: Converts learned patterns into robust, sparse binary vectors.
 
-5. **Stability Monitoring**:
+**Stability Monitoring**:
    - **Purpose**: Maintain system stability during learning.
    - **Process**: Adjusts parameters dynamically to balance plasticity and stability.
 
@@ -134,49 +129,46 @@ The Spatial Pooler is a fundamental component of Hierarchical Temporal Memory (H
 ### HTM Classifiers:
 Hierarchical Temporal Memory (HTM) classifiers play a crucial role in sequence learning and pattern recognition within the HTM framework. They are designed to associate Sparse Distributed Representations (SDRs) generated by the Spatial Pooler and Temporal Memory with meaningful labels, allowing the system to make predictions based on learned patterns. The HTM classifier works by mapping input SDRs to their corresponding output labels during the learning phase. Once trained, it can retrieve the most likely labels when presented with new or partial input patterns, making it particularly effective for recognizing temporal sequences and structured data. Unlike traditional classifiers, HTM classifiers leverage the biological principles of the neocortex, enabling them to handle noise, detect anomalies, and generalize from sparse inputs. Their ability to incrementally learn without requiring retraining makes them well-suited for real-time applications, such as image recognition, anomaly detection, and time-series forecasting. By continuously refining associations between SDRs and labels, HTM classifiers contribute to the adaptability and robustness of HTM-based systems.
 
+### Methodolgy of HTM Classifier:
+
+- **Data Preprocessing:** Input data (e.g., images) is binarized and converted into Sparse Distributed Representations (SDRs) for HTM processing.
+  
+- **Spatial Pooling & Encoding:** The Spatial Pooler (SP) generates stable SDRs, capturing essential patterns from the input data.
+  
+- **Training the Classifier:** The classifier learns associations between SDRs and class labels, updating dynamically as new data is processed.
+  
+- **Classification & Prediction:** When a new input is received, it is matched against stored SDRs, and the most probable label is assigned.
+  
+- **Evaluation & Optimization:** Performance is measured using similarity metrics, and enhancements like hyperparameter tuning or additional classifiers can improve accuracy. https://numenta.com/neuroscience-research/
+
 ### K-Nearest Neighbours (KNN) Classifiers:
 The K-Nearest Neighbours (KNN) classifier is a simple, non-parametric algorithm used for classification and regression tasks. It stores all the labeled training data and classifies new data points based on their similarity to the closest training samples. When a new input is provided, the algorithm computes its distance (commonly using Euclidean distance) from all training points, identifies the "k" nearest neighbours, and assigns the most common label among those neighbours to the input. In the context of this project, KNN could serve as a baseline classifier or a comparative model for evaluating SDR representations. When provided with an SDR or a derived feature vector, KNN computes distances (e.g., Euclidean) to its "k" closest neighbours and predicts the most frequent label among them. This method can be useful in this project to classify SDRs or reconstructed patterns, allowing comparisons between HTM's ability to generalize patterns and KNN's reliance on proximity and similarity. While KNN is straightforward and effective for small-scale problems, it lacks the adaptive learning and biological inspiration of HTM, making it less dynamic for processing evolving data streams.
+
+### Methodolgy of KNN Classifier:
+- **Learning Phase of the KNN Classifier:** The learning phase of the KNN classifer involves storing and managing labeled Sparse Distributed Representations (SDRs) to facilitate classification. Below are the key points outlining how learning is implemented:
+
+- **Training Data Storage:** The classifier maintains a dictionary _sdrMap, which maps each label (e.g., "A", "B", "C") to a list of SDR sequences.
+Each SDR sequence represents the active cells of an input pattern. Learn(TIN input, Cell[] cells) method is responsible for adding new SDR sequences to the model. It extracts the active cell indices from the cells array and converts them into an integer array.
+
+- **Avoiding Duplicate Sequences:** Before adding a new SDR sequence, the classifier checks if the exact sequence already exists for a given label.
+If an identical sequence is found, it is ignored to prevent redundancy.
+
+- **Maintaining Limited Storage Capacity:** The classifier keeps a maximum of _sdrs (default: 10) SDR sequences per label.
+If the number of stored sequences exceeds this limit, the oldest sequence is removed (FIFO mechanism).
+
+- **Incremental Learning:** The classifier dynamically updates the stored sequences, allowing it to adapt to new patterns over time.
+This makes it suitable for handling changes in input distributions while preserving previously learned patterns. This learning process ensures that the classifier builds a reference dataset of labeled SDRs, which will later be used in the classification (prediction) phase to determine the closest match for unknown inputs.
+
 
 ### Difference between HTM and KNN Classifiers:
 The core difference between Hierarchical Temporal Memory (HTM) and K-Nearest Neighbors (KNN) lies in their approach to learning, adaptability, and the ability to handle high-dimensional data like Sparse Distributed Representations (SDRs). When analyzed in the context of this project, these differences highlight the strengths and weaknesses of each model in processing binarized image data and reconstructing patterns.
 
-#### Learning Paradigm:
-HTM is a biologically inspired model designed to mimic how the human brain processes spatial and temporal data. It adapts to input patterns dynamically, learning spatial relationships in the input data over time through unsupervised mechanisms. In this project, HTM's spatial pooler captures the structure of SDRs from binarized images and reconstructs them efficiently, showing its capacity to learn and generalize patterns dynamically. In contrast, KNN is a non-parametric supervised learning algorithm that relies on labeled data for training. KNN does not "learn" patterns or adapt to new data over time; it simply compares new input data to its neighbors in the feature space, making it unsuitable for tasks requiring pattern reconstruction or adaptation without explicit labels.
+- **Learning Paradigm:** HTM is a biologically inspired model designed to mimic how the human brain processes spatial and temporal data. It adapts to input patterns dynamically, learning spatial relationships in the input data over time through unsupervised mechanisms. In this project, HTM's spatial pooler captures the structure of SDRs from binarized images and reconstructs them efficiently, showing its capacity to learn and generalize patterns dynamically. In contrast, KNN is a non-parametric supervised learning algorithm that relies on labeled data for training. KNN does not "learn" patterns or adapt to new data over time; it simply compares new input data to its neighbors in the feature space, making it unsuitable for tasks requiring pattern reconstruction or adaptation without explicit labels.
 
-#### Adaptability:
-HTM excels in its ability to continuously adapt to new inputs while preserving previously learned patterns. This makes it ideal for the iterative process of improving pattern recognition and reconstruction in this project. On the other hand, KNN does not adapt to new data unless the dataset is explicitly updated. This static nature makes it less suitable for evolving or streaming data scenarios, which are central to HTM's design.
+- **Adaptability:** HTM excels in its ability to continuously adapt to new inputs while preserving previously learned patterns. This makes it ideal for the iterative process of improving pattern recognition and reconstruction in this project. On the other hand, KNN does not adapt to new data unless the dataset is explicitly updated. This static nature makes it less suitable for evolving or streaming data scenarios, which are central to HTM's design.
 
-#### Handling High-Dimensional Data:
-The project deals with binary SDRs, which are high-dimensional and sparse by nature. HTM's design explicitly handles such data effectively by focusing on sparse, distributed representations. KNN, on the other hand, suffers from the "curse of dimensionality," where the distance metrics used for classification become less meaningful as dimensionality increases. This makes KNN less efficient and accurate when dealing with SDRs compared to HTM.
+- **Handling High-Dimensional Data:** The project deals with binary SDRs, which are high-dimensional and sparse by nature. HTM's design explicitly handles such data effectively by focusing on sparse, distributed representations. KNN, on the other hand, suffers from the "curse of dimensionality," where the distance metrics used for classification become less meaningful as dimensionality increases. This makes KNN less efficient and accurate when dealing with SDRs compared to HTM.
 
-#### Reconstruction of Input Patterns:
-HTM's spatial pooler not only classifies input patterns but also reconstructs them, a key requirement in this project. It achieves this by leveraging the learned synaptic connections and activation patterns. KNN lacks any mechanism for reconstructing input patterns since it is purely a classification algorithm, relying only on proximity-based voting.
+- **Reconstruction of Input Patterns:** HTM's spatial pooler not only classifies input patterns but also reconstructs them, a key requirement in this project. It achieves this by leveraging the learned synaptic connections and activation patterns. KNN lacks any mechanism for reconstructing input patterns since it is purely a classification algorithm, relying only on proximity-based voting.
 
-#### Similarity Metrics and Interpretability:
-In this project, HTM employs similarity metrics like the Jaccard Index to evaluate the overlap between the original and reconstructed SDRs. This interpretability and quantitative measure of learning are inherent to HTM. In contrast, KNN's interpretability is limited to understanding which neighbors influence a classification decision, and it does not contribute to understanding the underlying structure of the data.
-
-### Methodolgy:
-#### Learning Phase of the KNN Classifier:
-The learning phase of the KNN classifer involves storing and managing labeled Sparse Distributed Representations (SDRs) to facilitate classification. Below are the key points outlining how learning is implemented:
-
-#### Training Data Storage:
-The classifier maintains a dictionary _sdrMap, which maps each label (e.g., "A", "B", "C") to a list of SDR sequences.
-Each SDR sequence represents the active cells of an input pattern.
-
-#### Processing New Input Sequences
-The Learn(TIN input, Cell[] cells) method is responsible for adding new SDR sequences to the model.
-It extracts the active cell indices from the cells array and converts them into an integer array.
-
-#### Avoiding Duplicate Sequences
-Before adding a new SDR sequence, the classifier checks if the exact sequence already exists for a given label.
-If an identical sequence is found, it is ignored to prevent redundancy.
-
-#### Maintaining Limited Storage Capacity
-The classifier keeps a maximum of _sdrs (default: 10) SDR sequences per label.
-If the number of stored sequences exceeds this limit, the oldest sequence is removed (FIFO mechanism).
-
-#### Incremental Learning
-The classifier dynamically updates the stored sequences, allowing it to adapt to new patterns over time.
-This makes it suitable for handling changes in input distributions while preserving previously learned patterns.
-
-This learning process ensures that the classifier builds a reference dataset of labeled SDRs, which will later be used in the classification (prediction) phase to determine the closest match for unknown inputs.
+- **Similarity Metrics and Interpretability:** In this project, HTM employs similarity metrics like the Jaccard Index to evaluate the overlap between the original and reconstructed SDRs. This interpretability and quantitative measure of learning are inherent to HTM. In contrast, KNN's interpretability is limited to understanding which neighbors influence a classification decision, and it does not contribute to understanding the underlying structure of the data.
