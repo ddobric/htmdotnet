@@ -69,7 +69,7 @@ distinctiveness, through overlapping active bits for similar inputs and distinct
 inputs. This allows HTM systems to efficiently encode, recognize, and generalize patterns, just as the
 brain does when processing sensory input. SDRs form the foundation for all processing stages in
 HTM, including spatial pooling and temporal memory, providing a biologically plausible and
-computationally robust framework for learning and prediction.
+computationally robust framework for learning and prediction.https://www.frontiersin.org/journals/computational-neuroscience/articles/10.3389/fncom.2017.00111/full
 
 ### Hierarchical Temporal Memory (HTM)
 
@@ -88,7 +88,7 @@ Here’s a simplified breakdown of Spatial Pooler functions:
 **Stability & Generalization**: The SP ensures that similar inputs generate similar SDRs while also achieving invariance to minor variations, making the model resilient to noise and distortions.
 **Homeostatic Plasticity Control**: It monitors and maintains network stability, ensuring that the system adapts effectively while preventing excessive changes.
 **Classifier Integration**: The learned SDRs are later used for classification tasks, enabling recognition and prediction of input patterns based on prior learning.
-
+https://www.frontiersin.org/journals/computational-neuroscience/articles/10.3389/fncom.2017.00111/full
 
 
 ### Phases of the Spatial Pooler:
@@ -113,7 +113,7 @@ Hierarchical Temporal Memory (HTM) classifiers play a crucial role in sequence l
 - **Evaluation & Optimization:** Performance is measured using similarity metrics, and enhancements like hyperparameter tuning or additional classifiers can improve accuracy. https://numenta.com/neuroscience-research/
 
 ### K-Nearest Neighbours (KNN) Classifiers:
-The K-Nearest Neighbours (KNN) classifier is a simple, non-parametric algorithm used for classification and regression tasks. It stores all the labeled training data and classifies new data points based on their similarity to the closest training samples. When a new input is provided, the algorithm computes its distance (commonly using Euclidean distance) from all training points, identifies the "k" nearest neighbours, and assigns the most common label among those neighbours to the input. In the context of this project, KNN could serve as a baseline classifier or a comparative model for evaluating SDR representations. When provided with an SDR or a derived feature vector, KNN computes distances (e.g., Euclidean) to its "k" closest neighbours and predicts the most frequent label among them. This method can be useful in this project to classify SDRs or reconstructed patterns, allowing comparisons between HTM's ability to generalize patterns and KNN's reliance on proximity and similarity. While KNN is straightforward and effective for small-scale problems, it lacks the adaptive learning and biological inspiration of HTM, making it less dynamic for processing evolving data streams.
+The K-Nearest Neighbours (KNN) classifier is a simple, non-parametric algorithm used for classification and regression tasks. It stores all the labeled training data and classifies new data points based on their similarity to the closest training samples. When a new input is provided, the algorithm computes its distance (commonly using Euclidean distance) from all training points, identifies the "k" nearest neighbours, and assigns the most common label among those neighbours to the input. In the context of this project, KNN could serve as a baseline classifier or a comparative model for evaluating SDR representations. When provided with an SDR or a derived feature vector, KNN computes distances (e.g., Euclidean) to its "k" closest neighbours and predicts the most frequent label among them. This method can be useful in this project to classify SDRs or reconstructed patterns, allowing comparisons between HTM's ability to generalize patterns and KNN's reliance on proximity and similarity. While KNN is straightforward and effective for small-scale problems, it lacks the adaptive learning and biological inspiration of HTM, making it less dynamic for processing evolving data streams.scikit-learn.org
 
 ### Methodolgy of KNN Classifier:
 - **Learning Phase of the KNN Classifier:** The learning phase of the KNN classifer involves storing and managing labeled Sparse Distributed Representations (SDRs) to facilitate classification. Below are the key points outlining how learning is implemented:
@@ -130,6 +130,7 @@ If the number of stored sequences exceeds this limit, the oldest sequence is rem
 - **Incremental Learning:** The classifier dynamically updates the stored sequences, allowing it to adapt to new patterns over time.
 This makes it suitable for handling changes in input distributions while preserving previously learned patterns. This learning process ensures that the classifier builds a reference dataset of labeled SDRs, which will later be used in the classification (prediction) phase to determine the closest match for unknown inputs.
 
+- **Similarity Checking:** The similarity checking phase of the KNN (K-Nearest Neighbors) classifier is a critical step where the model evaluates how closely an unknown input resembles previously classified data. This process involves computing the distance between the unclassified input and stored labeled sequences using distance metrics such as Euclidean distance, Manhattan distance, or Hamming distance, depending on the dataset’s nature. The classifier then ranks the results based on the lowest computed distances, with the closest matches assigned higher similarity scores. A voting mechanism is used where the most frequently occurring labels among the nearest neighbors determine the classification of the unknown input. If the overlap between the unknown and classified sequences exceeds 50%, direct similarity is prioritized; otherwise, the model follows a majority voting approach.KNN’s effectiveness depends on the choice of distance metric and the number of neighbors considered, which directly influence classification accuracy. https://scikit-learn.org/stable/ 
 
 ### Difference between HTM and KNN Classifiers:
 The core difference between Hierarchical Temporal Memory (HTM) and K-Nearest Neighbors (KNN) lies in their approach to learning, adaptability, and the ability to handle high-dimensional data like Sparse Distributed Representations (SDRs). When analyzed in the context of this project, these differences highlight the strengths and weaknesses of each model in processing binarized image data and reconstructing patterns.
