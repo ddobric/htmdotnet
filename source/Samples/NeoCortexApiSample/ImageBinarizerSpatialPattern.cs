@@ -73,45 +73,53 @@ namespace NeoCortexApiSample
         {
 
             var mem = new Connections(cfg);
-
             bool isInStableState = false;
-
             int numColumns = 64 * 64;
+
             //Accessing the Image Folder form the Cureent Directory
             string trainingFolder = "Sample\\TestFiles";
             //Accessing the Image Folder form the Cureent Directory Folder
-            var trainingImages = Directory.EnumerateFiles(trainingFolder).Where(file => file.StartsWith($"{trainingFolder}\\{inputPrefix}") &&
+            var actualImages = Directory.EnumerateFiles(trainingFolder).Where(file => file.StartsWith($"{trainingFolder}\\{inputPrefix}") &&
             (file.EndsWith(".jpeg") || file.EndsWith(".jpg") || file.EndsWith(".png"))).ToArray();
+
             //Image Size
-            //int imageSize = 25;
             int imgHeight = 30;
             int imgWidth = 60;
+
             // Path to the folder where results will be saved
             String outputFolder = ".\\BinarizedImages";
             // Delete the folder if it exists
             if (Directory.Exists(outputFolder))
             {
-                Directory.Delete(outputFolder, true);
+                Directory.Delete(outputFolder, true); // This will delete the folder and all its contents
             }
             // Recreate the folder
             Directory.CreateDirectory(outputFolder);
+
+            // Dictionaries to map actual images to their SDRs for later training phase
+            Dictionary<string, Cell[]> actualImagesSDRs = new Dictionary<string, Cell[]>();
+            Dictionary<string, string> binarizedToActualMap = new Dictionary<string, string>();
+
             // Taking all the binarized image path in a list
             var binarizedImagePaths = new List<string>();
-            foreach (var image in trainingImages)
+            foreach (var actualImage in actualImages)
             {
+                string actualImageKey = Path.GetFileNameWithoutExtension(actualImage);
+
                 // Construct the output file name based on the input file name
-                string outputFileName = Path.GetFileNameWithoutExtension(image) + "_Binarized";
+                string outputFileName = actualImageKey + "_Binarized";
                 string outputPath = Path.Combine(outputFolder, outputFileName);
 
                 // Binarizing the images
-                string binaryImagePath = BinarizeImage(imgWidth, imgHeight, outputPath, image);
-                //string binarizedImagePath = NeoCortexUtils.BinarizeImage($"{image}", imageSize, outputPath);
-                binarizedImagePaths.Add(binaryImagePath);
+                string binarizedImagePath = BinarizeImage(imgWidth, imgHeight, outputPath, actualImage);
+                binarizedImagePaths.Add(binarizedImagePath);
+                //Store mapping from binarized to actual
+                binarizedToActualMap[outputFileName] = actualImageKey;
             }
-            Debug.WriteLine("All images are binarized");
+            Debug.WriteLine("All images are binarized and mapped to actual images");
 
 
-            HomeostaticPlasticityController hpa = new HomeostaticPlasticityController(mem, trainingImages.Length * 50, (isStable, numPatterns, actColAvg, seenInputs) =>
+            HomeostaticPlasticityController hpa = new HomeostaticPlasticityController(mem, actualImages.Length * 50, (isStable, numPatterns, actColAvg, seenInputs) =>
             {
                 // Event should only be fired when entering the stable state.
                 if (isStable)
@@ -143,9 +151,6 @@ namespace NeoCortexApiSample
             int maxCycles = 200;
             int currentCycle = 0;
 
-            // Dictionary to store SDRs for later training
-            Dictionary<string, Cell[]> imageSDRMap = new Dictionary<string, Cell[]>();
-
             // Create the "SDROutput" folder if it doesn't exist, or delete and recreate it each time
             string sdrOutputFolder = ".\\SDROutput";
             // Delete the folder if it exists
@@ -153,6 +158,7 @@ namespace NeoCortexApiSample
             {
                 Directory.Delete(sdrOutputFolder, true);  // This will delete the folder and all its contents
             }
+
             //Initializing KNN Classifier
             var knnClassifier = new KNeighborsClassifier<string, string>();
             var labeledSDRs = new Dictionary<string, List<int[]>>();
@@ -184,19 +190,20 @@ namespace NeoCortexApiSample
                         var activeCols = ArrayUtils.IndexWhere(activeArray, (el) => el == 1);
                         var cells = activeCols.Select(index => new Cell(index, 0, cfg.CellsPerColumn, new CellActivity())).ToArray();
 
-                        string image = Path.GetFileNameWithoutExtension(binarizedImagePath);
+                        string binarizedKey = Path.GetFileNameWithoutExtension(binarizedImagePath);
 
-                        // Store SDR representation for later training
-                        imageSDRMap[image] = cells;
+                        // Store SDR representation mapped to the actual image for later training
+                        string actualImageKey = binarizedToActualMap[binarizedKey];
+                        actualImagesSDRs[actualImageKey] = cells;
 
-                        Debug.WriteLine($"Cycle: {currentCycle} - Image-Input: {image}");
+                        Debug.WriteLine($"Cycle: {currentCycle} - Image-Input: {actualImageKey}");
                         Debug.WriteLine($"INPUT :{Helpers.StringifyVector(inputVector)}");
                         Debug.WriteLine($"SDR: {Helpers.StringifyVector(activeCols)}\n");
 
                         // Store SDRs only for the first stable cycle
                         if (isInStableState && !storedStableCycleSDRs)
                         {
-                            string label = image; // Label the SDRs with the image name for training
+                            string label = actualImageKey; // Label the SDRs with the image name for training
                             knnClassifier.Learn(label, activeCols.Select(idx => new Cell { Index = idx }).ToArray());
                             if (!labeledSDRs.ContainsKey(label))
                             {
@@ -204,7 +211,7 @@ namespace NeoCortexApiSample
                             }
                             labeledSDRs[label].Add(activeCols);
 
-                            Console.WriteLine($"Stable Cycle: {currentCycle} - Image-Input: {image}");
+                            Console.WriteLine($"Stable Cycle: {currentCycle} - Image-Input: {actualImageKey}");
                             Console.WriteLine($"SDR: {Helpers.StringifyVector(activeCols)}\n");
 
                             Debug.WriteLine($"Storing SDRs for the first stable cycle: {currentCycle}");
@@ -247,13 +254,13 @@ namespace NeoCortexApiSample
             // ===========================
             Debug.WriteLine("Starting Classifier Training Phase...");
 
-            foreach (var entry in imageSDRMap)
+            foreach (var entry in actualImagesSDRs)
             {
-                string imageKey = entry.Key;
+                string actualImageKey = entry.Key;
                 Cell[] cells = entry.Value;
 
-                imageClassifier.Learn(imageKey, cells);
-                Debug.WriteLine($"Trained Classifier on Image: {imageKey}");
+                imageClassifier.Learn(actualImageKey, cells);
+                Debug.WriteLine($"Trained Classifier on Image: {actualImageKey}");
             }
 
             Debug.WriteLine("Classifier Training Completed.\n");
@@ -270,12 +277,13 @@ namespace NeoCortexApiSample
 
                 var activeCols = ArrayUtils.IndexWhere(activeArray, (el) => el == 1);
                 var cells = activeCols.Select(index => new Cell(index, 0, cfg.CellsPerColumn, new CellActivity())).ToArray();
-                string actualImage = Path.GetFileNameWithoutExtension(binarizedImagePath);
+                string binarizedKey = Path.GetFileNameWithoutExtension(binarizedImagePath);
+                string actualImageKey = binarizedToActualMap[binarizedKey];
 
                 // Get top 3 predicted images
                 var predictedImages = imageClassifier.GetPredictedInputValues(cells, 3);
 
-                Debug.WriteLine($"Actual Image: {actualImage}");
+                Debug.WriteLine($"Actual Image: {actualImageKey}");
                 foreach (var prediction in predictedImages)
                 {
                     Debug.WriteLine($"Predicted Image: {prediction.PredictedInput} - Similarity: {prediction.Similarity}");
