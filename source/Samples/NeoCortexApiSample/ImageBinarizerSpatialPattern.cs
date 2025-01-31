@@ -240,7 +240,7 @@ namespace NeoCortexApiSample
                         break;
                 }
             }
-            Debug.WriteLine("It has reached the stable stage");
+            Debug.WriteLine("It has reached the stable stage\n");
 
             // ===========================
             //      CLASSIFIER TRAINING PHASE
@@ -256,13 +256,38 @@ namespace NeoCortexApiSample
                 Debug.WriteLine($"Trained Classifier on Image: {imageKey}");
             }
 
-            Debug.WriteLine("Classifier Training Completed.");
+            Debug.WriteLine("Classifier Training Completed.\n");
+
+            // ===========================
+            //      PREDICTION PHASE
+            // ===========================
+            Debug.WriteLine("Starting Prediction Phase...");
+
+            foreach (var binarizedImagePath in binarizedImagePaths)
+            {
+                int[] inputVector = NeoCortexUtils.ReadCsvIntegers(binarizedImagePath).ToArray();
+                sp.compute(inputVector, activeArray, false);  // false prevents SP from updating
+
+                var activeCols = ArrayUtils.IndexWhere(activeArray, (el) => el == 1);
+                var cells = activeCols.Select(index => new Cell(index, 0, cfg.CellsPerColumn, new CellActivity())).ToArray();
+                string actualImage = Path.GetFileNameWithoutExtension(binarizedImagePath);
+
+                // Get top 3 predicted images
+                var predictedImages = imageClassifier.GetPredictedInputValues(cells, 3);
+
+                Debug.WriteLine($"Actual Image: {actualImage}");
+                foreach (var prediction in predictedImages)
+                {
+                    Debug.WriteLine($"Predicted Image: {prediction.PredictedInput} - Similarity: {prediction.Similarity}");
+                }
+            }
+            Debug.WriteLine("Prediction Phase Completed.\n");
+
             // ===========================
             //    RESET CLASSIFIER
             // ===========================
             Debug.WriteLine("Resetting Classifier for Next Experiment...");
             imageClassifier.ClearState();
-            Debug.WriteLine("Prediction Phase Completed.");
             return sp;
         }
         /// <summary>
@@ -466,4 +491,3 @@ namespace NeoCortexApiSample
 
     }
 }
-
