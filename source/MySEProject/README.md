@@ -9,7 +9,7 @@
 - [Sparse Distributed Representations (SDR)](#sparse-distributed-representations-sdr)
 - [Hierarchical Temporal Memory (HTM)](#hierarchical-temporal-memory-htm)
 - [Spatial Pooler (SP)](#spatial-pooler-sp)
-  - [Spatial Pooler Functions and Mechanisms](#spatial-pooler-functions-and-mechanisms)
+  - [Spatial Pooler Functions](#spatial-pooler-functions)
   - [Phases of the Spatial Pooler](#phases-of-the-spatial-pooler)
 - [K-Nearest Neighbours (KNN) Classifiers](#k-nearest-neighbours-knn-classifiers)
   - [Methodolgy of KNN Classifier](#methodolgy-of-knn-classifier)
@@ -79,52 +79,23 @@ Hierarchical Temporal Memory is a theoretical framework and machine learning app
 
 The Spatial Pooler is a fundamental component of Hierarchical Temporal Memory (HTM) systems, transforming raw input data into Sparse Distributed Representations (SDRs). Its primary function is to encode the input while ensuring key properties such as sparsity and similarity preservation. Sparsity ensures that only a small percentage of bits in the SDR are active, which improves computational efficiency and reduces noise sensitivity. Similarity preservation means that inputs with similar patterns produce SDRs with overlapping active bits, enabling the system to recognize related patterns effectively. The Spatial Pooler achieves this through competition among columns of cells, where each column competes to represent specific input features, guided by synaptic connections that adapt over time. This adaptation allows the Spatial Pooler to learn the statistical structure of the input space, making it robust to noise and capable of generalizing from limited data. As a result, the Spatial Pooler provides the foundation for further processing, such as temporal learning and classification, in HTM systems.
 
-### Spatial Pooler Functions and Mechanisms
+### Spatial Pooler Functions 
+Here’s a simplified breakdown of Spatial Pooler functions:
 
-**Input Processing:** 
-- Accepts spatially encoded patterns, such as binary vectors from the ImageEncoder.
-- Prepares inputs for compatibility with HTM's SDR format.
+**Input Binarization & Encoding**: The SP receives binarized image inputs and encodes them into a high-dimensional numerical format.
+**Sparse Distributed Representations (SDRs)**: The SP converts dense input patterns into SDRs by activating a small set of columns, ensuring efficient memory usage and robust pattern recognition.
+**Learning & Adaptation**: Over multiple training cycles, the SP strengthens connections to frequently active input bits, reinforcing stable pattern recognition.
+**Stability & Generalization**: The SP ensures that similar inputs generate similar SDRs while also achieving invariance to minor variations, making the model resilient to noise and distortions.
+**Homeostatic Plasticity Control**: It monitors and maintains network stability, ensuring that the system adapts effectively while preventing excessive changes.
+**Classifier Integration**: The learned SDRs are later used for classification tasks, enabling recognition and prediction of input patterns based on prior learning.
 
-**Sparse Distributed Representations (SDR) Generation:** 
-- Produces sparse binary outputs with a controlled percentage of active bits.
-- Ensures similar inputs yield SDRs with overlapping active bits, while dissimilar inputs produce distinct representations.
 
-**Learning and Adaptation:**
-- Learns the statistical properties of input patterns via synaptic adaptation.
-- Dynamically adjusts synaptic permanence to optimize connectivity.
-
-**Noise Resilience:**
-- Generalizes input patterns to recognize noisy or incomplete data.
-- Maintains robustness against input variations.
-
-**Stability and Plasticity:** 
-- Balances stability and flexibility in representations, ensuring consistent encoding of recurring patterns while adapting to new inputs.
 
 ### Phases of the Spatial Pooler:
 
-**Overlap Phase**:
-   - **Purpose**: Compute overlap between input patterns and synaptic connections for each column.
-   - **Process**: Columns assess the similarity of their synapses to the input; higher overlap values indicate better matches.
+The Spatial Pooler (SP) works in three steps: overlap, inhibition, and learning. First, in the overlap phase, each column in the SP checks how well it matches the input by counting the number of strong connections (synapses) receiving active signals ("1"). The more strong connections it has, the better it matches the input. Next, in the inhibition phase, only the best-matching columns stay active, while others are suppressed. This competition ensures that only the most relevant patterns are represented. Finally, in the learning phase, the SP adjusts its connections based on experience—correct predictions strengthen connections, while incorrect ones weaken them. Over time, this allows the SP to recognize patterns consistently, even with slight changes or noise in the input. This process ensures stable, sparse, and efficient pattern recognition.
 
-**Inhibition Phase**:
-   - **Purpose**: Ensure sparsity by limiting active columns.
-   - **Process**: Columns compete within their inhibition radius, and only the top percentage of columns with the highest overlap are activated.
-
-**Learning Phase**:
-   - **Purpose**: Adapt synaptic connections to improve encoding of input patterns.
-   - **Process**:
-     - Active columns strengthen their synapses.
-     - Synaptic permanence values are updated based on input activity and learning thresholds.
-     - Homeostatic mechanisms promote balanced column utilization.
-
-**Output Generation**:
-   - **Purpose**: Produce high-quality SDRs for downstream processing.
-   - **Process**: Converts learned patterns into robust, sparse binary vectors.
-
-**Stability Monitoring**:
-   - **Purpose**: Maintain system stability during learning.
-   - **Process**: Adjusts parameters dynamically to balance plasticity and stability.
-
+Reference: Cui, Y., Ahmad, S., & Hawkins, J. (2017). The HTM Spatial Pooler—A Neocortical Algorithm for Online Sparse Distributed Coding. Frontiers in Computational Neuroscience. [https://www.frontiersin.org/articles/10.3389/fncom.2017.00111/full](https://www.frontiersin.org/journals/computational-neuroscience/articles/10.3389/fncom.2017.00111/full)
 
 ### HTM Classifiers:
 Hierarchical Temporal Memory (HTM) classifiers play a crucial role in sequence learning and pattern recognition within the HTM framework. They are designed to associate Sparse Distributed Representations (SDRs) generated by the Spatial Pooler and Temporal Memory with meaningful labels, allowing the system to make predictions based on learned patterns. The HTM classifier works by mapping input SDRs to their corresponding output labels during the learning phase. Once trained, it can retrieve the most likely labels when presented with new or partial input patterns, making it particularly effective for recognizing temporal sequences and structured data. Unlike traditional classifiers, HTM classifiers leverage the biological principles of the neocortex, enabling them to handle noise, detect anomalies, and generalize from sparse inputs. Their ability to incrementally learn without requiring retraining makes them well-suited for real-time applications, such as image recognition, anomaly detection, and time-series forecasting. By continuously refining associations between SDRs and labels, HTM classifiers contribute to the adaptability and robustness of HTM-based systems.
