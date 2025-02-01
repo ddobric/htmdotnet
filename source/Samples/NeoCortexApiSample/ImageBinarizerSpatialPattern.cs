@@ -263,13 +263,20 @@ namespace NeoCortexApiSample
                 string binarizedKey = Path.GetFileNameWithoutExtension(binarizedImagePath);
                 string actualImageKey = binarizedToActualMap[binarizedKey];
 
-                // Get top 3 predicted images
+                // Get top 3 predicted images by htm classifier
                 var predictedImages = imageClassifier.GetPredictedInputValues(cells, 3);
 
                 Debug.WriteLine($"Actual Image: {actualImageKey}");
                 foreach (var prediction in predictedImages)
                 {
                     Debug.WriteLine($"Predicted Image by HTM Classifier: {prediction.PredictedInput} - Similarity: {prediction.Similarity}");
+                }
+                // Get predicted images by knn classfier
+                var knnPredictions = knnClassifier.GetPredictedInputValues(cells, 3);
+
+                foreach (var prediction in knnPredictions)
+                {
+                    Debug.WriteLine($"Predicted Image by KNN Classifier: {prediction.PredictedInput} - Similarity: {Math.Round(prediction.Similarity, 2)}");
                 }
             }
             Debug.WriteLine("Prediction Phase Completed.\n");
