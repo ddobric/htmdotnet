@@ -201,14 +201,6 @@ namespace NeoCortexApiSample
                         // Store SDRs only for the first stable cycle
                         if (isInStableState && !storedStableCycleSDRs)
                         {
-                            string label = actualImageKey; // Label the SDRs with the image name for training
-                            knnClassifier.Learn(label, activeCols.Select(idx => new Cell { Index = idx }).ToArray());
-                            if (!labeledSDRs.ContainsKey(label))
-                            {
-                                labeledSDRs[label] = new List<int[]>();
-                            }
-                            labeledSDRs[label].Add(activeCols);
-
                             Console.WriteLine($"Stable Cycle: {currentCycle} - Image-Input: {actualImageKey}");
                             Console.WriteLine($"SDR: {Helpers.StringifyVector(activeCols)}\n");
 
@@ -249,7 +241,9 @@ namespace NeoCortexApiSample
                 Cell[] cells = entry.Value;
 
                 imageClassifier.Learn(actualImageKey, cells);
-                Debug.WriteLine($"Trained Classifier on Image: {actualImageKey}");
+                Debug.WriteLine($"Trained HTM Classifier on Image: {actualImageKey}");
+                knnClassifier.Learn(actualImageKey, cells);
+                Debug.WriteLine($"Trained KNN Classifier on Image: {actualImageKey}");
             }
 
             Debug.WriteLine("Classifier Training Completed.\n");
@@ -275,7 +269,7 @@ namespace NeoCortexApiSample
                 Debug.WriteLine($"Actual Image: {actualImageKey}");
                 foreach (var prediction in predictedImages)
                 {
-                    Debug.WriteLine($"Predicted Image: {prediction.PredictedInput} - Similarity: {prediction.Similarity}");
+                    Debug.WriteLine($"Predicted Image by HTM Classifier: {prediction.PredictedInput} - Similarity: {prediction.Similarity}");
                 }
             }
             Debug.WriteLine("Prediction Phase Completed.\n");
