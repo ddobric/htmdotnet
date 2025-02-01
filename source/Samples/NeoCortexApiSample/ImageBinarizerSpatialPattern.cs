@@ -143,6 +143,8 @@ namespace NeoCortexApiSample
             sp.Init(mem, new DistributedMemory() { ColumnDictionary = new InMemoryDistributedDictionary<int, NeoCortexApi.Entities.Column>(1) });
             //It creates the instance of HTMClassifier
             HtmClassifier<string, ComputeCycle> imageClassifier = new HtmClassifier<string, ComputeCycle>();
+            //It creates the instance of KNNClassifier
+            var knnClassifier = new KNeighborsClassifier<string, ComputeCycle>();
 
             int[] activeArray = new int[numColumns];
 
@@ -158,10 +160,6 @@ namespace NeoCortexApiSample
             {
                 Directory.Delete(sdrOutputFolder, true);  // This will delete the folder and all its contents
             }
-
-            //Initializing KNN Classifier
-            var knnClassifier = new KNeighborsClassifier<string, string>();
-            var labeledSDRs = new Dictionary<string, List<int[]>>();
 
             // Recreate the folder
             Directory.CreateDirectory(sdrOutputFolder);
@@ -219,15 +217,6 @@ namespace NeoCortexApiSample
 
                             // Ensure content is written to the file immediately
                             writer.Flush();
-                        }
-
-                        if (isInStableState)
-                        {
-                            foreach (var testSDR in labeledSDRs)
-                            {
-                                var predictions = knnClassifier.GetPredictedInputValues(activeCols.Select(idx => new Cell { Index = idx }).ToArray());
-                                //Debug.WriteLine($"Predictions for {image}: {string.Join(", ", predictions.Select(p => p.PredictedInput))}");
-                            }
                         }
                     }
 
