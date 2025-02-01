@@ -284,8 +284,9 @@ namespace NeoCortexApiSample
             // ===========================
             //    RESET CLASSIFIER
             // ===========================
-            Debug.WriteLine("Resetting Classifier for Next Experiment...");
+            Debug.WriteLine("Resetting  both the Classifiers for Next Experiment...");
             imageClassifier.ClearState();
+            knnClassifier.ClearState();
             return sp;
         }
         /// <summary>
