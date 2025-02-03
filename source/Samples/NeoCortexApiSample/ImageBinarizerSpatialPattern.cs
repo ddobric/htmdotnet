@@ -71,7 +71,6 @@ namespace NeoCortexApiSample
         /// <returns>The trained bersion of the SP.</returns>
         private SpatialPooler RunExperiment(HtmConfig cfg, string inputPrefix)
         {
-
             var mem = new Connections(cfg);
             bool isInStableState = false;
             int numColumns = 64 * 64;
@@ -149,85 +148,50 @@ namespace NeoCortexApiSample
             int[] activeArray = new int[numColumns];
 
             int numStableCycles = 0;
-            bool storedStableCycleSDRs = false; // Flag to track if SDRs are stored for the first stable cycle
             int maxCycles = 200;
             int currentCycle = 0;
-
-            // Create the "SDROutput" folder if it doesn't exist, or delete and recreate it each time
-            string sdrOutputFolder = ".\\SDROutput";
-            // Delete the folder if it exists
-            if (Directory.Exists(sdrOutputFolder))
-            {
-                Directory.Delete(sdrOutputFolder, true);  // This will delete the folder and all its contents
-            }
-
-            // Recreate the folder
-            Directory.CreateDirectory(sdrOutputFolder);
-            // Create a text file to store the SDRs
-            string sdrFilePath = Path.Combine(sdrOutputFolder, "SDRs.txt");
 
             // ===========================
             //       SPATIAL POOLER PHASE
             // ===========================
-            // Open a StreamWriter to write to the file
-            using (StreamWriter writer = new StreamWriter(sdrFilePath, append: false))
+
+            while (currentCycle < maxCycles)
             {
-                // Redirect console output to the file
-                Console.SetOut(writer);
-
-                while (currentCycle < maxCycles)
+                foreach (var binarizedImagePath in binarizedImagePaths)
                 {
-                    foreach (var binarizedImagePath in binarizedImagePaths)
-                    {
-                        // Read Binarized and Encoded input CSV file into an array
-                        int[] inputVector = NeoCortexUtils.ReadCsvIntegers(binarizedImagePath).ToArray();
+                    // Read Binarized and Encoded input CSV file into an array
+                    int[] inputVector = NeoCortexUtils.ReadCsvIntegers(binarizedImagePath).ToArray();
 
-                        sp.compute(inputVector, activeArray, true);
+                    sp.compute(inputVector, activeArray, true);
 
-                        // Getting the Active Columns
-                        var activeCols = ArrayUtils.IndexWhere(activeArray, (el) => el == 1);
-                        var cells = activeCols.Select(index => new Cell(index, 0, cfg.CellsPerColumn, new CellActivity())).ToArray();
+                    // Getting the Active Columns
+                    var activeCols = ArrayUtils.IndexWhere(activeArray, (el) => el == 1);
+                    var cells = activeCols.Select(index => new Cell(index, 0, cfg.CellsPerColumn, new CellActivity())).ToArray();
 
-                        string binarizedKey = Path.GetFileNameWithoutExtension(binarizedImagePath);
+                    string binarizedKey = Path.GetFileNameWithoutExtension(binarizedImagePath);
 
-                        // Store SDR representation mapped to the actual image for later training
-                        string actualImageKey = binarizedToActualMap[binarizedKey];
-                        actualImagesSDRs[actualImageKey] = cells;
+                    // Store SDR representation mapped to the actual image for later training
+                    string actualImageKey = binarizedToActualMap[binarizedKey];
+                    actualImagesSDRs[actualImageKey] = cells;
 
-                        Debug.WriteLine($"Cycle: {currentCycle} - Image-Input: {actualImageKey}");
-                        Debug.WriteLine($"INPUT :{Helpers.StringifyVector(inputVector)}");
-                        Debug.WriteLine($"SDR: {Helpers.StringifyVector(activeCols)}\n");
+                    Debug.WriteLine($"Cycle: {currentCycle} - Image-Input: {actualImageKey}");
+                    Debug.WriteLine($"INPUT :{Helpers.StringifyVector(inputVector)}");
+                    Debug.WriteLine($"SDR: {Helpers.StringifyVector(activeCols)}\n");
 
-                        // Store SDRs only for the first stable cycle
-                        if (isInStableState && !storedStableCycleSDRs)
-                        {
-                            Console.WriteLine($"Stable Cycle: {currentCycle} - Image-Input: {actualImageKey}");
-                            Console.WriteLine($"SDR: {Helpers.StringifyVector(activeCols)}\n");
-
-                            Debug.WriteLine($"Storing SDRs for the first stable cycle: {currentCycle}");
-                            storedStableCycleSDRs = true;
-
-                            // Ensure content is written to the file immediately
-                            writer.Flush();
-                        }
-                    }
-
-                    Debug.WriteLine($"Completed Cycle * {currentCycle} * Stability: {isInStableState}\n");
-                    currentCycle++;
-                    //Check if the desired number of cycles is reached
-                    if (currentCycle >= maxCycles)
-                        break;
-
-                    // Increment numStableCycles only when it's in a stable state
-                    if (isInStableState)
-                    {
-                        numStableCycles++;
-                    }
-
-                    if (numStableCycles > 5)
-                        break;
                 }
+
+            Debug.WriteLine($"Completed Cycle * {currentCycle} * Stability: {isInStableState}\n");
+            currentCycle++;
+            //Check if the desired number of cycles is reached
+            if (currentCycle >= maxCycles) break;
+
+            // Increment numStableCycles only when it's in a stable state
+            if (isInStableState) numStableCycles++;
+
+            if (numStableCycles > 5) break;
+
             }
+
             Debug.WriteLine("It has reached the stable stage\n");
 
             // ===========================
