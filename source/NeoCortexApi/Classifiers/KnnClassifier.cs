@@ -229,6 +229,7 @@ namespace NeoCortexApi.Classifiers
                 cls.PredictedInput = key;
                 cls.Similarity = similarity[key];
                 cls.NumOfSameBits = overLaps[key];
+                cls.SDR = _sdrMap[key].FirstOrDefault();
                 result.Add(cls);
             }
 
