@@ -228,19 +228,19 @@ namespace NeoCortexApiSample
                 string actualImageKey = binarizedToActualMap[binarizedKey];
 
                 // Get top 3 predicted images by htm classifier
-                var predictedImages = imageClassifier.GetPredictedInputValues(cells, 3);
+                var predictedImages = imageClassifier.GetPredictedInputValues(cells, 1);
 
                 Debug.WriteLine($"Actual Image: {actualImageKey}");
                 foreach (var prediction in predictedImages)
                 {
-                    Debug.WriteLine($"Predicted Image by HTM Classifier: {prediction.PredictedInput} - Similarity: {prediction.Similarity}");
+                    Debug.WriteLine($"Predicted Image by HTM Classifier: {prediction.PredictedInput} - Similarity: {prediction.Similarity}\nSDR: [{string.Join(",", prediction.SDR)}]\n");
                 }
                 // Get predicted images by knn classfier
-                var knnPredictions = knnClassifier.GetPredictedInputValues(cells, 3);
+                var knnPredictions = knnClassifier.GetPredictedInputValues(cells, 1);
 
                 foreach (var prediction in knnPredictions)
                 {
-                    Debug.WriteLine($"Predicted Image by KNN Classifier: {prediction.PredictedInput} - Similarity: {Math.Round(prediction.Similarity, 2)}");
+                    Debug.WriteLine($"Predicted Image by KNN Classifier: {prediction.PredictedInput} - Similarity: {Math.Round(prediction.Similarity, 2)}\nSDR: [{string.Join(",", prediction.SDR)}]\n");
                 }
             }
             Debug.WriteLine("Prediction Phase Completed.\n");
