@@ -217,6 +217,17 @@ namespace NeoCortexApiSample
             // ===========================
             Debug.WriteLine("Starting Prediction Phase...");
 
+            String outputReconstructedHTMFolder = ".\\ReconstructedHTM";
+            if (Directory.Exists(outputReconstructedHTMFolder)) Directory.Delete(outputReconstructedHTMFolder, true);
+            // Recreate the folder
+            Directory.CreateDirectory(outputReconstructedHTMFolder);
+
+            String outputReconstructedKNNFolder = ".\\ReconstructedKNN";
+            if (Directory.Exists(outputReconstructedKNNFolder)) Directory.Delete(outputReconstructedKNNFolder, true);
+            // Recreate the folder
+            Directory.CreateDirectory(outputReconstructedKNNFolder);
+
+
             foreach (var binarizedImagePath in binarizedImagePaths)
             {
                 int[] inputVector = NeoCortexUtils.ReadCsvIntegers(binarizedImagePath).ToArray();
@@ -228,31 +239,41 @@ namespace NeoCortexApiSample
                 string actualImageKey = binarizedToActualMap[binarizedKey];
 
                 // Get predicted image by htm classifier
-                var predictedImages = imageClassifier.GetPredictedInputValues(cells, 1);
+                var predictedImagesHTM = imageClassifier.GetPredictedInputValues(cells, 1);
+
+                // Get top predicted image SDRs from KNN Classifier
+                var predictedImagesKNN = knnClassifier.GetPredictedInputValues(cells, 1);
 
                 Debug.WriteLine($"Actual Image: {actualImageKey}");
-                if (predictedImages.Count > 0)
+
+                // Process HTM Classifier Predictions
+                if (predictedImagesHTM.Count > 0)
                 {
                     // Get the highest similarity prediction
-                    var bestPrediction = predictedImages.OrderByDescending(p => p.Similarity).First();
+                    var bestPrediction = predictedImagesHTM.OrderByDescending(p => p.Similarity).First();
 
                     Debug.WriteLine($"Predicted Image by HTM Classifier: {bestPrediction.PredictedInput} - Similarity: {bestPrediction.Similarity}%\nSDR: [{string.Join(",", bestPrediction.SDR)}]\n");
-                    
+                    var outputFileName = $"Reconstructed_HTM_{bestPrediction.PredictedInput}.txt";
+                    string outputHtmFolder = Path.Combine(outputReconstructedHTMFolder, outputFileName);
+                    // Reconstruct the image based on predicted SDR
+                    GenerateBinarizedImageAsText(bestPrediction.SDR, imgWidth, imgHeight, outputHtmFolder);
+
                 }
                 else
                 {
                     Debug.WriteLine($"No predictions found for {actualImageKey}");
                 }
-
-                // Get predicted images by knn classfier
-                var knnPredictions = knnClassifier.GetPredictedInputValues(cells, 1);
-
-                foreach (var prediction in knnPredictions)
+                foreach (var prediction in predictedImagesKNN)
                 {
                     Debug.WriteLine($"Predicted Image by KNN Classifier: {prediction.PredictedInput} - Similarity: {Math.Round(prediction.Similarity, 2 )* 100}%\nSDR: [{string.Join(",", prediction.SDR)}]\n");
+                    var outputFileName = $"Reconstructed_KNN_{prediction.PredictedInput}.txt";
+                    string outputKnnFolder = Path.Combine(outputReconstructedKNNFolder, outputFileName);
+                    // Reconstruct the image based on predicted SDR
+                    GenerateBinarizedImageAsText(prediction.SDR, imgWidth, imgHeight, outputKnnFolder);
                 }
             }
             Debug.WriteLine("Prediction Phase Completed.\n");
+            Debug.WriteLine($"Binary SDR images reconstructed and saved");
 
             // ===========================
             //    RESET CLASSIFIER
