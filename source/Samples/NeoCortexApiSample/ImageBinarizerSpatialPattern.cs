@@ -237,6 +237,7 @@ namespace NeoCortexApiSample
                     var bestPrediction = predictedImages.OrderByDescending(p => p.Similarity).First();
 
                     Debug.WriteLine($"Predicted Image by HTM Classifier: {bestPrediction.PredictedInput} - Similarity: {bestPrediction.Similarity}%\nSDR: [{string.Join(",", bestPrediction.SDR)}]\n");
+                    
                 }
                 else
                 {
@@ -260,6 +261,41 @@ namespace NeoCortexApiSample
             imageClassifier.ClearState();
             knnClassifier.ClearState();
             return sp;
+        }
+        static void GenerateBinarizedImageAsText(int[] SDR, int imgWidth, int imgHeight, string filePath)
+        {
+            // Create a 2D array filled with '0's
+            char[,] binarizedImage = new char[imgHeight, imgWidth];
+            for (int i = 0; i < imgHeight; i++)
+                for (int j = 0; j < imgWidth; j++)
+                    binarizedImage[i, j] = '0';
+
+            int maxSDRIndex = SDR.Max();  // Find the maximum SDR index
+            int maxGridIndex = imgWidth * imgHeight - 1; // Maximum allowed index for 30x60 grid
+
+            foreach (int index in SDR)
+            {
+                // Scale the SDR index to fit within the grid
+                int scaledIndex = (int)((double)index / maxSDRIndex * maxGridIndex);
+
+                int row = scaledIndex / imgWidth;
+                int col = scaledIndex % imgWidth;
+
+                binarizedImage[row, col] = '1';
+            }
+
+            // Write to text file
+            using (StreamWriter writer = new StreamWriter(filePath))
+            {
+                for (int i = 0; i < imgHeight; i++)
+                {
+                    for (int j = 0; j < imgWidth; j++)
+                    {
+                        writer.Write(binarizedImage[i, j]);
+                    }
+                    writer.WriteLine(); // Newline for next row
+                }
+            }
         }
         /// <summary>
         /// Runs the restructuring experiment using the provided spatial pooler. 
