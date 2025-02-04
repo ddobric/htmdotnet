@@ -227,20 +227,28 @@ namespace NeoCortexApiSample
                 string binarizedKey = Path.GetFileNameWithoutExtension(binarizedImagePath);
                 string actualImageKey = binarizedToActualMap[binarizedKey];
 
-                // Get top 3 predicted images by htm classifier
+                // Get predicted image by htm classifier
                 var predictedImages = imageClassifier.GetPredictedInputValues(cells, 1);
 
                 Debug.WriteLine($"Actual Image: {actualImageKey}");
-                foreach (var prediction in predictedImages)
+                if (predictedImages.Count > 0)
                 {
-                    Debug.WriteLine($"Predicted Image by HTM Classifier: {prediction.PredictedInput} - Similarity: {prediction.Similarity}\nSDR: [{string.Join(",", prediction.SDR)}]\n");
+                    // Get the highest similarity prediction
+                    var bestPrediction = predictedImages.OrderByDescending(p => p.Similarity).First();
+
+                    Debug.WriteLine($"Predicted Image by HTM Classifier: {bestPrediction.PredictedInput} - Similarity: {bestPrediction.Similarity}%\nSDR: [{string.Join(",", bestPrediction.SDR)}]\n");
                 }
+                else
+                {
+                    Debug.WriteLine($"No predictions found for {actualImageKey}");
+                }
+
                 // Get predicted images by knn classfier
                 var knnPredictions = knnClassifier.GetPredictedInputValues(cells, 1);
 
                 foreach (var prediction in knnPredictions)
                 {
-                    Debug.WriteLine($"Predicted Image by KNN Classifier: {prediction.PredictedInput} - Similarity: {Math.Round(prediction.Similarity, 2)}\nSDR: [{string.Join(",", prediction.SDR)}]\n");
+                    Debug.WriteLine($"Predicted Image by KNN Classifier: {prediction.PredictedInput} - Similarity: {Math.Round(prediction.Similarity, 2 )* 100}%\nSDR: [{string.Join(",", prediction.SDR)}]\n");
                 }
             }
             Debug.WriteLine("Prediction Phase Completed.\n");
