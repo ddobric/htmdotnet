@@ -24,4 +24,9 @@ namespace NeocortexApiSamplePerformance
                 {
                     var input = new MultiSequenceInput
                     {
-        
+                        ExperimentId = int.Parse(worksheet.Cells[row, 1].Text),
+                        ExperimentName = worksheet.Cells[row, 2].Text,
+                        CPU = int.Parse(worksheet.Cells[row, 3].Text),
+                        DotnetVersion = worksheet.Cells[row, 4].Text,
+                        W = int.Parse(worksheet.Cells[row, 5].Text),
+                        N = int.Parse(worksheet.Cells[row, 6].Text),
