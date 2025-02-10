@@ -43,3 +43,5 @@ namespace NeocortexApiSamplePerformance
                         PotentialRadius = int.Parse(worksheet.Cells[row, 17].Text),
                         MaxBoost = double.Parse(worksheet.Cells[row, 18].Text),
                         DutyCyclePeriod = int.Parse(worksheet.Cells[row, 19].Text),
+                        MinPctOverlapDutyCycles = double.Parse(worksheet.Cells[row, 20].Text),
+                        MaxSynapsesPerSegment = int.Parse(worksheet.Cells[row, 21].Text),
