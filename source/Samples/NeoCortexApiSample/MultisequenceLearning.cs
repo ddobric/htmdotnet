@@ -47,7 +47,7 @@ namespace NeoCortexApiSample
                 ActivationThreshold = 15,
                 ConnectedPermanence = 0.5,
 
-                // Learning is slower than forgetting in this case.
+                // Learning is slower than forgetting in this case..
                 PermanenceDecrement = 0.25,
                 PermanenceIncrement = 0.15,
 
@@ -74,9 +74,7 @@ namespace NeoCortexApiSample
             return RunExperiment(inputBits, cfg, encoder, sequences);
         }
 
-        /// <summary>
-        ///
-        /// </summary>
+        
         private Predictor RunExperiment(int inputBits, HtmConfig cfg, EncoderBase encoder, Dictionary<string, List<double>> sequences)
         {
             Stopwatch sw = new Stopwatch();
@@ -237,6 +235,7 @@ namespace NeoCortexApiSample
                         Debug.WriteLine($"Col  SDR: {Helpers.StringifyVector(lyrOut.ActivColumnIndicies)}");
                         Debug.WriteLine($"Cell SDR: {Helpers.StringifyVector(actCells.Select(c => c.Index).ToArray())}");
 
+                        //
                         //
                         // If the list of predicted values from the previous step contains the currently presenting value,
                         // we have a match.
